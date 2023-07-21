@@ -186,3 +186,4 @@ int main()
   if(!jogar)
     exibirTabelaRanking(melhoresResultados);
 }
+
