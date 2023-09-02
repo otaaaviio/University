@@ -10,7 +10,9 @@
 #include <allegro5/allegro_image.h>
 
 // codigo para compilar
-// gcc efe.c -o efe -lallegro -lallegro_primitives -lallegro_font -lallegro_ttf && ./efe
+// gcc efe.c -o efe -lallegro -lallegro_primitives -lallegro_font -lallegro_ttf -lallegro_image  && ./efe
+
+
 
 #define TAM 5
 
