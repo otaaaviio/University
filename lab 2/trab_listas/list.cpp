@@ -52,7 +52,7 @@ public:
     cout << "Jogador adicionado com sucesso!" << endl;
     waitEnter();
     }
-
+ 
     void removePlayer(const string& playerName) {
         Player* current = firstPlayer;
         Player* previous = nullptr;
@@ -128,8 +128,8 @@ public:
         Player* current = firstPlayer;
         if(current == nullptr)
             cout << "Sem jogadores cadastrados." << endl;
-
-        cout << "Relatório de estatísticas (por jogador)." << endl;
+        else
+            cout << "Relatório de estatísticas (por jogador)." << endl;
         while(current != nullptr) {
             cout << "Jogador: " << current->name << endl;
             cout << "Gols feitos: " << current->goals << endl;
@@ -347,6 +347,8 @@ class TeamList {
 
     void reportSortedTeams() {
         if (firstTeam == nullptr || firstTeam->next == nullptr) {
+            cout << "Sem times cadastrados." << endl;
+            waitEnter();
             return;
         }
 
@@ -393,7 +395,7 @@ class TeamList {
     void reportTeams() {
         Team* current = firstTeam;
         if(current == nullptr)
-            cout << "Sem Times cadastrados." << endl;
+            cout << "Sem times cadastrados." << endl;
         else
             cout << "Relatório de estatísticas (por time)." << endl;
         while(current != nullptr) {
@@ -434,42 +436,103 @@ class Match {
 class MatchList {
     public:
     Match *firstMatch;
+    MatchList* next;
 
     MatchList() : firstMatch(nullptr) {}
 
-    void newEvent(int min, int event) {
-        string typeEvent;
-        switch (event)
-        {
-        case 1:
-            typeEvent = "GOL";
-            break;
-        case 2:
-            typeEvent = "CARTÃO AMARELO";
-            break;
-        case 3:
-            typeEvent = "CARTÃO VERMELHO";
-            break;
-        case 4:
-            typeEvent = "FALTA";
-            break;
-        case 5:
-            typeEvent = "SUBSTITUIÇÃO";
-            break;
-        default:
-        cout << "Lance inválido." << endl;
-            return;
+    void addMatch(Match* match) {
+        Match* newMatch = new Match(*match);
+        newMatch->next = nullptr;
+        if(firstMatch == nullptr) {
+            firstMatch = newMatch;
+        } else {
+            Match* current = firstMatch;
+            while (current->next != nullptr) {
+                current = current->next; 
+            }
+            current->next = newMatch; 
         }
+        delete match;
+        cout << "Partida adicionado com sucesso!" << endl;
+        waitEnter();
     }
 
-    void newMatch(const Match& match) {
-        Match* newMatch = new Match(match);
-        newMatch->next = firstMatch;
-        firstMatch = newMatch;
-        while(1){
-            //newEvent();
+    void removeMatch(const string& homeTeamName, const string& visitingTeamName) {
+        Match* current = firstMatch;
+        Match* previous = nullptr;
+
+        while (current != nullptr && (current->homeTeam->name != homeTeamName || current->visitingTeam->name != visitingTeamName)) {
+            previous = current;
+            current = current->next;
         }
-        cout << "Partida adicionada com sucesso!" << endl;
+
+        if (current != nullptr) {
+            if (previous != nullptr) {
+                previous->next = current->next;
+            } else {
+                firstMatch = current->next;
+            }
+            delete current;
+            cout << "Partida removida com sucesso!" << endl;
+        } else {
+            cout << "Partida não encontrada." << endl;
+        }
+        waitEnter();
+    }
+    
+    Match* searchMatch(const string& homeTeamName, const string& visitingTeamName) {
+        Match* current = firstMatch;
+        while (current != nullptr) {
+            if (current->homeTeam->name == homeTeamName && current->visitingTeam->name == visitingTeamName) {
+                return current;
+            }
+            current = current->next;
+        }
+        return nullptr;
+    }
+
+    void removeAllMatches() {
+        Match* current = firstMatch;
+        while (current != nullptr) {
+            Match* temp = current;
+            current = current->next;
+            delete temp;
+        }
+        firstMatch = nullptr;  
+    }
+};
+
+class RoundList {
+    public:
+    MatchList* firstMatchList;
+
+    RoundList() : firstMatchList(nullptr) {}
+
+    void addMatchList(MatchList* matchList) {
+        MatchList* newMatchList = new MatchList(*matchList);
+        newMatchList->next = nullptr;
+        if (firstMatchList == nullptr) {
+            firstMatchList = newMatchList;
+        } else {
+            MatchList* current = firstMatchList;
+            while (current->next != nullptr) {
+                current = current->next;
+                cout << "Rodada cadastrada com sucesso.";
+            }
+            current->next = newMatchList;
+        }
+        delete matchList;
+        waitEnter();
+    }
+
+    void removeAllMatchLists() {
+        MatchList* current = firstMatchList;
+        while (current != nullptr) {
+            MatchList* temp = current;
+            current = current->next;
+            delete temp;
+        }
+        firstMatchList = nullptr;  
     }
 };
 
@@ -657,11 +720,176 @@ void menu_teams(TeamList* teamList, PlayerList* playerList, TrainerList* trainer
     }
 }
 
-void menu_matches(MatchList* matchList) {
+void new_match(MatchList* matchList, TeamList* teamList, PlayerList* playerList) {
+    clear_screen();
+    Team* homeTeam = nullptr;
+    Team* visitingTeam = nullptr;
+    Player* player;
+    Match* match;
+    vector<string> playersHome(11);
+    vector<string> playersVisiting(11);
+    string homeTeamName, visitingTeamName;
 
+    cout << "Digite o nome do time da casa: ";
+    cin >> homeTeamName;
+    homeTeam = teamList->searchTeam(homeTeamName);
+
+    cout << "Digite o nome do time visitante: ";
+    cin >> visitingTeamName;
+    visitingTeam = teamList->searchTeam(visitingTeamName);
+
+    clear_screen();
+
+    if (homeTeam != nullptr && visitingTeam != nullptr) {
+        cout << "Escalação time da casa: " << homeTeamName << endl;
+        for (int i = 0; i < 11; i++) {
+            cout << "Digite o nome do jogador cadastrado no time: ";
+            cin >> playersHome[i];
+        }
+
+        clear_screen();
+
+        cout << "Escalação time visitante: " << visitingTeamName << endl;
+        for (int i = 0; i < 11; i++) {
+            cout << "Digite o nome do jogador cadastrado no time: ";
+            cin >> playersVisiting[i];
+        }
+
+        int minute, select = 0, goalsHome = 0, goalsVisiting = 0;
+        string team, playerName;
+        while (select != 5) {
+            clear_screen();
+            cout << "Narrar partida" << endl;
+            cout << "(1) Gol" << endl;
+            cout << "(2) Cartao amarelo" << endl;
+            cout << "(3) Cartao vermelho" << endl;
+            cout << "(4) Falta" << endl;
+            cout << "(5) Encerrar partida" << endl;
+            cin >> select;
+
+            clear_screen();
+            if(select != 5) {
+            cout << "Minuto: "; cin >> minute;
+            cout << "Time: "; cin >> team;
+            cout << "Jogador: "; cin >> playerName;
+            player = playerList->findPlayer(playerName);
+            }
+            waitEnter();
+
+            switch (select) {
+                case 1: {
+                    if (team == homeTeamName) {
+                        homeTeam->goalsScored++;
+                        visitingTeam->goalsConceded++;
+                        goalsHome++;
+                    } else {
+                        homeTeam->goalsConceded++;
+                        visitingTeam->goalsScored++;
+                        goalsVisiting++;
+                    }
+                    player->goals++;
+                    break;
+                }
+                case 2:
+                    if (team == homeTeamName) {
+                        homeTeam->yellowCards++;
+                    } else {
+                        visitingTeam->yellowCards++;
+                    }
+                    player->yellowCards++;
+                    break;
+                case 3:
+                    if (team == homeTeamName) {
+                        homeTeam->redCards++;
+                    } else {
+                        visitingTeam->redCards++;
+                    }
+                    player->redCards++;
+                    break;
+                case 4:
+                    if (team == homeTeamName) {
+                        homeTeam->fouls++;
+                    } else {
+                        visitingTeam->fouls++;
+                    }
+                    player->fouls++;
+                    break;
+                case 5:
+                    if(goalsHome > goalsVisiting)
+                        homeTeam->wins++;
+                    else if(goalsHome < goalsVisiting)
+                        visitingTeam->wins++;
+                    else{
+                        visitingTeam->draws++;
+                        homeTeam->draws++;
+                    }
+                    match = new Match(homeTeam, visitingTeam);
+                    matchList->addMatch(match);
+                    delete match;
+                    break;
+                default:
+                    cout << "Opção inválida. Tente novamente." << endl;
+                    break;
+            }
+        }
+    } else {
+        cout << "Erro, tente novamente." << endl;
+        waitEnter();
+    }
 }
 
-void main_menu(PlayerList* playerList, TrainerList* trainerList, TeamList* teamList, MatchList* matchList) {
+void menu_matches(MatchList* matchList, TeamList* teamList, PlayerList* playerList) {
+    int select;
+    string homeTeam, visitingTeam;
+    clear_screen();
+    while(select != 4) {
+        cout << "Gerenciamento de partidas." << endl;
+        cout << "(1) Cadastrar nova partida" << endl;
+        cout << "(2) Remover partida" << endl;
+        cout << "(3) Pesquisar partida" << endl;
+        cout << "(4) Voltar pro menu principal." << endl;
+        cout << "Selecione uma opção: ";
+        cin >> select;
+
+        switch (select)
+        {
+        case 1:
+            new_match(matchList, teamList, playerList);
+            break;
+        case 2:
+            cout << "Digite o time da casa: "; cin >> homeTeam;
+            cout << "Digite o time visitante: "; cin >> visitingTeam;
+            matchList->removeMatch(homeTeam, visitingTeam);
+            break;
+        case 3:
+            cout << "Digite o time da casa: "; cin >> homeTeam;
+            cout << "Digite o time visitante: "; cin >> visitingTeam;
+            matchList->searchMatch(homeTeam, visitingTeam);
+            break;
+        }
+    }
+}
+
+void menu_rounds(RoundList* roundList, MatchList* matchList) {
+    int select = 1;
+    while(select != 2){
+        clear_screen();
+        cout << "Gerenciamento de rodadas" << endl;
+        cout << "(1) Cadastrar rodadas" << endl;
+        cout << "(2) Voltar" << endl;
+        cout << "Selecione uma opção: ";
+        cin >> select;
+
+        switch (select)
+        {
+        case 1:
+            roundList->addMatchList(matchList);
+            break;
+        }
+    }
+}
+
+void main_menu(PlayerList* playerList, TrainerList* trainerList, TeamList* teamList, MatchList* matchList, RoundList* roundList) {
     int select = 1;
     while(select != 0){
         clear_screen();
@@ -669,8 +897,8 @@ void main_menu(PlayerList* playerList, TrainerList* trainerList, TeamList* teamL
         cout << "(1) Gerenciar jogadores" << endl;
         cout << "(2) Gerenciar treinadores" << endl;
         cout << "(3) Gerenciar times" << endl;
-        cout << "(4) Cadastrar partidas" << endl;
-        cout << "(5) Cadastrar rodadas" << endl;
+        cout << "(4) Gerenciar partidas" << endl;
+        cout << "(5) Gerenciar rodadas" << endl;
         cout << "(6) Sair" << endl;
         cout << "Selecione uma opção: ";
         cin >> select;
@@ -687,10 +915,10 @@ void main_menu(PlayerList* playerList, TrainerList* trainerList, TeamList* teamL
             menu_teams(teamList, playerList, trainerList);
             break;
         case 4:
-            menu_matches(matchList);
+            menu_matches(matchList, teamList, playerList);
             break;
         case 5:
-            //main_players();
+            menu_rounds(roundList, matchList);
             break;
         case 6:
             return;
@@ -703,10 +931,15 @@ int main(){
     TrainerList* trainerList = new TrainerList();
     TeamList* teamList = new TeamList();
     MatchList* matchList = new MatchList();
+    RoundList* roundList = new RoundList();
 
-    main_menu(playerList, trainerList, teamList, matchList);
+    main_menu(playerList, trainerList, teamList, matchList, roundList);
 
     playerList->removeAllPlayers();
+    trainerList->removeAllTrainers();
+    teamList->removeAllTeams();
+    matchList->removeAllMatches();
+    roundList->removeAllMatchLists();
 
     return 0;
 }
