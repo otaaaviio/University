@@ -1,6 +1,9 @@
 {
-    "files.associations": {
-        "trab1_2022": "c",
-        "string.h": "c"
-    }
+  "files.associations": {
+    "*.embeddedhtml": "html",
+    "trab1_2022": "c",
+    "string.h": "c",
+    "stdlib.h": "c",
+    "time.h": "c"
+  }
 }
